@@ -1,0 +1,9 @@
+RewriteEngine on
+RewriteCond %{REQUEST_URI} !^/admincp/$ [NC]
+RewriteRule ^([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/([a-zA-Z0-9\/]+)/?$ index.php?page=$1&subpage=$2&request=$3 [QSA]
+RewriteRule ^([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/?$ index.php?page=$1&subpage=$2 [QSA]
+RewriteRule ^([a-zA-Z0-9]+)/?$ index.php?page=$1 [QSA]
+
+RewriteCond %{REQUEST_FILENAME} !\.(jpg|png|gif)$
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-s

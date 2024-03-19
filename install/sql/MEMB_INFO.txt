@@ -1,0 +1,36 @@
+SET ANSI_NULLS ON
+
+SET QUOTED_IDENTIFIER ON
+
+SET ANSI_PADDING ON
+
+CREATE TABLE [dbo].[{TABLE_NAME}](
+	[memb_guid] [int] IDENTITY(1,1) NOT NULL,
+	[memb___id] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[memb__pwd] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[memb_name] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[sno__numb] [char](13) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[post_code] [char](6) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[addr_info] [varchar](50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[addr_deta] [varchar](50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[tel__numb] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[phon_numb] [varchar](15) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[mail_addr] [varchar](50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[fpas_ques] [varchar](50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[fpas_answ] [varchar](50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[job__code] [char](2) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[appl_days] [datetime] NULL,
+	[modi_days] [datetime] NULL,
+	[out__days] [datetime] NULL,
+	[true_days] [datetime] NULL,
+	[mail_chek] [char](1) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[bloc_code] [char](1) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[ctl1_code] [char](1) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[cspoints] [int] NULL,
+	[VipType] [int] NULL,
+	[VipStart] [datetime] NULL,
+	[VipDays] [datetime] NULL,
+	[JoinDate] [varchar](23) COLLATE SQL_Latin1_General_CP1_CI_AS NULL
+) ON [PRIMARY]
+
+SET ANSI_PADDING OFF

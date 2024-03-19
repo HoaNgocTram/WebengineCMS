@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings>
+	<active>0</active>
+	<paypal_enable_sandbox>0</paypal_enable_sandbox>
+	<paypal_email>your paypal mail</paypal_email>
+	<paypal_title>Donation for Cash</paypal_title>
+	<paypal_currency>USD</paypal_currency>
+	<paypal_return_url>https://yourwebsite/</paypal_return_url>
+	<paypal_notify_url>http://yourwebsite/api/paypal.php</paypal_notify_url>
+	<paypal_conversion_rate>200</paypal_conversion_rate>
+	<credit_config>1</credit_config>
+</settings>

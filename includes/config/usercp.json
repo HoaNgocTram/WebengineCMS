@@ -1,0 +1,32 @@
+[
+    {
+        "active": true,
+        "type": "internal",
+        "phrase": "usercp_menu_txt_1",
+        "link": "usercp\/myaccount",
+        "icon": "account.png",
+        "visibility": "user",
+        "newtab": false,
+        "order": 10
+    },
+    {
+        "active": true,
+        "type": "internal",
+        "phrase": "emblem_txt_1",
+        "link": "upload",
+        "icon": "emblem.png",
+        "visibility": "user",
+        "newtab": false,
+        "order": 20
+    },
+    {
+        "active": true,
+        "type": "internal",
+        "phrase": "module_titles_txt_21",
+        "link": "donation",
+        "icon": "donate.png",
+        "visibility": "user",
+        "newtab": false,
+        "order": 30
+    }
+]
