@@ -24,7 +24,7 @@ try {
 			$webengineRegister_user           = $_POST['webengineRegister_user'];
 	 		$webengineRegister_pwd           = $_POST['webengineRegister_pwd'];
 	 		$webengineRegister_pwdc           = $_POST['webengineRegister_pwdc'];
-	 		$webengineRegister_email           = $_POST['webengineRegister_email'];
+	 		$webengineRegister_email           = test_input($_POST['webengineRegister_email']);
 
 			 $res = odbc_exec($connect, "SELECT * FROM Account WHERE UserID = '" . $webengineRegister_user . "'");
 			 if (odbc_num_rows($res) >= 1) {
@@ -42,6 +42,13 @@ try {
 				 echo '</script>';
 				 die();
 			 }
+			 if (!filter_var($webengineRegister_email, FILTER_VALIDATE_EMAIL)) {
+				echo '<script language="javascript">';
+				echo 'alert("E-mail Invalid \n \nEmail không hợp lệ");';
+				echo 'document.location = ""';
+				echo '</script>';
+				die();
+			 }
 			 if (isset($webengineRegister_user[10])) {
 				echo '<script language="javascript">';
 				echo 'alert("Account is too long (Max 10 Characters)\n \nTài khoản quá dài (tối đa 10 ký tự)");';
@@ -49,13 +56,18 @@ try {
 				echo '</script>';
 				die();
 			 }
-		
 			 if (isset($webengineRegister_pwd[20])) {
 				echo '<script language="javascript">';
 				echo 'alert("Password is too long (Max 20 Characters)\n \nMật khẩu quá dài (tối đa 20 ký tự)");';
 				echo 'document.location = ""';
 				echo '</script>';
 				die();
+			 }
+			 function test_input($data) {
+				$data = trim($data);
+				$data = stripslashes($data);
+				$data = htmlspecialchars($data);
+				return $data;
 			 }
 
 			$regacc =  odbc_exec($connect, "INSERT INTO Account (UserID, Name, Email, UGradeID, PGradeID, RegDate) VALUES ('$webengineRegister_user', '$webengineRegister_user', '$webengineRegister_email', 0, 0, GETDATE())");
