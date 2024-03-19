@@ -44,7 +44,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-### WebEngine CMS Official Website
+### GunZ WebEngine CMS Priview Website
 [GunZ WebEngine CMS Website](https://gunz.vn/)
 
 ### Discord Server
