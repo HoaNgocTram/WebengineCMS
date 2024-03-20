@@ -77,19 +77,78 @@ function templateBuildUsercp() {
 }
 
 function templateCastleSiegeWidget() {
-	$castleSiege = new CastleSiege();
-	if(!$castleSiege->showWidget()) return;
-	$siegeData = $castleSiege->siegeData();
-	if(!is_array($siegeData)) return;
-	
-	if($siegeData['castle_data'][_CLMN_MCD_OCCUPY_] == 1) {
-		$guildOwner = guildProfile($siegeData['castle_data'][_CLMN_MCD_GUILD_OWNER_]);
-		$guildOwnerMark = $siegeData['castle_owner_alliance'][0][_CLMN_GUILD_LOGO_];
-		$guildMaster = playerProfile($siegeData['castle_owner_alliance'][0][_CLMN_GUILD_MASTER_]);
-	} else {
-		$guildOwner = '-';
-		$guildOwnerMark = '1111111111111111111111111114411111144111111111111111111111111111';
-		$guildMaster = '-';
+	include('./modules/config.php');
+	$res = odbc_exec($connect,"SELECT TOP 1 * FROM Clan WHERE DeleteFlag=0 AND Ranking != 0 ORDER BY TotalPoint DESC");
+	$FirstClan = odbc_fetch_array($res);
+		$firstclanemb0 = $FirstClan['EmblemUrl'];
+		$firstclanname0 = ($FirstClan['Name'] == "") ? "No Data" : $FirstClan['Name'];
+
+	$clan = odbc_exec($connect,"SELECT * FROM Clan WHERE DeleteFlag=0 AND Name = '" .$firstclanname0."' ");
+	$clan1 = odbc_fetch_array($clan);
+	$masterCID = $clan1['MasterCID'];
+
+	$master = odbc_exec($connect,"SELECT * FROM Character WHERE CID = '" .$masterCID."' ");
+	$master1 = odbc_fetch_array($master);
+	$masterclan = ($master1['Name'] == "") ? "No Data" : $master1['Name'];
+
+	$war = odbc_exec($connect,"SELECT TOP 1 * FROM ClanGameLog WHERE WinnerClanName = '" .$firstclanname0."' ORDER BY RegDate DESC");
+	$war1 =  odbc_fetch_array($war);
+	$enemyclan = $war1['LoserClanName']; 
+	$win = ($war1['RoundWins'] == "") ? "No Data" : $war1['RoundWins'];
+	$lose = ($war1['RoundLosses']  == "") ? "No Data" : $war1['RoundLosses'];
+	$mapname = ($war1['MapID'] == "") ? "No Data" : $war1['MapID'];
+	if($war1['MapID'] == 0){
+		$mapname = "Mansion";
+	}elseif($war1['MapID'] == 1){
+		$mapname = "Prison";
+	}elseif($war1['MapID'] == 2){
+		$mapname = "Station";
+	}elseif($war1['MapID'] == 3){
+		$mapname = "Station II";
+	}elseif($war1['MapID'] == 4){
+		$mapname = "Battle Arena";
+	}elseif($war1['MapID'] == 5){
+		$mapname = "Town";
+	}elseif($war1['MapID'] == 6){
+		$mapname = "Dungeon";
+	}elseif($war1['MapID'] == 7){
+		$mapname = "Dungeon II";
+	}elseif($war1['MapID'] == 8){
+		$mapname = "Ruin";
+	}elseif($war1['MapID'] == 9){
+		$mapname = "Island";
+	}elseif($war1['MapID'] == 10){
+		$mapname = "Garden";
+	}elseif($war1['MapID'] == 11){
+		$mapname = "Castle";
+	}elseif($war1['MapID'] == 12){
+		$mapname = "Factory";
+	}elseif($war1['MapID'] == 13){
+		$mapname = "Port";
+	}elseif($war1['MapID'] == 14){
+		$mapname = "Lost Shrine";
+	}elseif($war1['MapID'] == 15){
+		$mapname = "Stairway";
+	}elseif($war1['MapID'] == 16){
+		$mapname = "Snow Town";
+	}elseif($war1['MapID'] == 17){
+		$mapname = "Hall";
+	}elseif($war1['MapID'] == 18){
+		$mapname = "Catacomb";
+	}elseif($war1['MapID'] == 19){
+		$mapname = "Jail";
+	}elseif($war1['MapID'] == 20){
+		$mapname = "Shower Room";
+	}elseif($war1['MapID'] == 21){
+		$mapname = "High Haven";
+	}elseif($war1['MapID'] == 22){
+		$mapname = "Citadel";
+	}elseif($war1['MapID'] == 23){
+		$mapname = "RelayMap";
+	}elseif($war1['MapID'] == 24){
+		$mapname = "Halloween Town";
+	}elseif($war1['MapID'] == 25){
+		$mapname = "Weapon Shop";
 	}
 	
 	echo '<div class="panel castle-owner-widget">';
@@ -99,22 +158,25 @@ function templateCastleSiegeWidget() {
 		echo '<div class="panel-body">';
 			echo '<div class="row">';
 				echo '<div class="col-sm-6 text-center">';
-					echo returnGuildLogo($guildOwnerMark, 100);
+				if ($firstclanemb0 == NULL)
+				echo '<td><img src="'.__BASE_URL__.'/clan/emblem/no_emblem.png" class="emblem width="100" height="100""/></td>';
+				else
+				echo '<td><img src="'.__BASE_URL__.''.$firstclanemb0.'" class="emblem width="100" height="100""/></td>';
 				echo '</div>';
 				echo '<div class="col-sm-6">';
-					echo '<span class="alt">'.lang('castlesiege_txt_2').'</span><br />';
-					echo $guildOwner . '<br /><br />';
+					echo '<span class="alt">Clan Name</span><br /><b>';
+					echo $firstclanname0 . '<b><br /><br />';
 					echo '<span class="alt">'.lang('castlesiege_txt_12').'</span><br />';
-					echo $guildMaster;
+					echo $masterclan;
 				echo '</div>';
 			echo '</div>';
 			echo '<div class="row" style="margin-top: 20px;">';
 				echo '<div class="col-sm-12 text-center">';
-					echo '<span class="alt">'.lang('castlesiege_txt_21').'</span><br />';
-					echo $siegeData['current_stage']['title'] . '<br /><br />';
-					echo '<span class="alt">'.lang('castlesiege_txt_1').'</span><br />';
-					echo $siegeData['warfare_stage_countdown'] . '<br /><br />';
-					echo '<a href="'.__BASE_URL__.'castlesiege" class="btn btn-castlewidget btn-xs">'.lang('castlesiege_txt_7').'</a>';
+					echo '<span class="alt">Last War Win Clan</span><br />';
+					echo '<span style="font-size:20px;"><span style="color:red">'.$enemyclan.'</span> at map <span style="color:red">'.$mapname.'</span></br>';
+					echo '<span class="alt">War History</span><br />';
+					echo '<span style="font-size:20px;"><span style="color:#71F253">Win</span> : '.$win.' | <span style="color:red">Lose</span> : '.$lose.'</span></br>';
+					//echo '<a href="'.__BASE_URL__.'castlesiege" class="btn btn-castlewidget btn-xs">'.lang('castlesiege_txt_7').'</a>';
 				echo '</div>';
 			echo '</div>';
 		echo '</div>';
