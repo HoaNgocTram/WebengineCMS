@@ -71,7 +71,7 @@ if(is_array($srvInfo)) {
 }
 
 // Castle Siege Block
-//templateCastleSiegeWidget();
+templateCastleSiegeWidget();
 
 /*// Top Level
 $levelRankingData = LoadCacheData('rankings_level.cache');
