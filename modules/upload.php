@@ -28,20 +28,11 @@ if( odbc_num_rows($re) > 0 ){
   	}
 }
 
-/*if ( $C_MemCID != $C_MasterCID ) {
-	echo '<script language="javascript">';
-	echo 'alert("You are not Clan Master \n \nBạn không phải chủ Clan");';
-	echo 'document.location = "usercp/myaccount"';
-	echo '</script>';
-	die();
-}*/
 
 if (isset($_POST['submit'])) {      
   $CLID = $_POST['clan'];
 	$target = "./clan/emblem/";
 	$target = $target . basename( $_FILES['uploaded']['name']) ;
-  $up1 = odbc_exec($connect, "UPDATE Clan SET EmblemChecksum = EmblemChecksum + 1 WHERE Name = '$CLID'");
-	$up2 = odbc_exec($connect, "UPDATE Clan SET EmblemUrl = '".$target."' WHERE Name = '$CLID'");
 	$ok=1;
   
   
@@ -68,15 +59,23 @@ if (isset($_POST['submit'])) {
 		  echo '</script>';
 		  die();
 	}
+	elseif ( $C_MemCID != $C_MasterCID ) {
+		echo '<script language="javascript">';
+		echo 'alert("You are not Clan Master \n \nBạn không phải chủ Clan");';
+		echo 'document.location = "usercp/myaccount"';
+		echo '</script>';
+		die();
+	}
 	else {
 	  if(move_uploaded_file($_FILES['uploaded']['tmp_name'], $target)){
-		  echo '<script language="javascript">';
-			echo 'alert("File uploaded successfully! \nGunZ The Duel  \n \nFile upload thành công! \nGunZ The Duel");';
-			echo 'document.location = ""';
-			echo '</script>';
-			die();
-		
-	  }
+		$up1 = odbc_exec($connect, "UPDATE Clan SET EmblemChecksum = EmblemChecksum + 1 WHERE Name = '$CLID'");
+		$up2 = odbc_exec($connect, "UPDATE Clan SET EmblemUrl = '".$target."' WHERE Name = '$CLID'");
+		echo '<script language="javascript">';
+		echo 'alert("File uploaded successfully! \nGunZ The Duel  \n \nFile upload thành công! \nGunZ The Duel");';
+		echo 'document.location = ""';
+		echo '</script>';
+		die();
+		}
 	}
 }
 echo '<div class="page-title"><span>'.lang('emblem_txt_1',true).'</span></div>';	echo '<td><img src="'.__BASE_URL__.''.$C_Emblem.'" class="emblem width="50" height="50""/></td>';		
