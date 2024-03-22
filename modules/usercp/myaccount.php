@@ -31,6 +31,7 @@ $onlineStatus = ($common->accountOnline($_SESSION['username']) ? '<span class="l
 # account status
 $checkuser = odbc_exec($connect, "SELECT * FROM Account WHERE UserID = '" .$_SESSION['username']. "'");
 $usr = odbc_fetch_array($checkuser);
+$aid = $usr['AID'];
 $accountStatus = ($usr['UGradeID'] == "253") ? '<span class="label label-danger">'.lang('myaccount_txt_8').'</span>' : '<span class="label label-success">'.lang('myaccount_txt_7').'</span>';
 //$accountStatus = ($accountInfo[_CLMN_BLOCCODE_] == 1 ? '<span class="label label-danger">'.lang('myaccount_txt_8').'</span>' : '<span class="label label-default">'.lang('myaccount_txt_7').'</span>');
 
@@ -98,44 +99,57 @@ echo '<table class="table myaccount-table">';
 	} catch(Exception $ex) {}
 echo '</table>';
 
-/*// Account Characters
-echo '<div class="page-title"><span>'.lang('myaccount_txt_15').'</span></div>';
-if(is_array($AccountCharacters)) {
-	$onlineCharacters = loadCache('online_characters.cache') ? loadCache('online_characters.cache') : array();
-	echo '<div class="row text-center">';
-		foreach($AccountCharacters as $characterName) {
-			$characterData = $Character->CharacterData($characterName);
-			if(!is_array($characterData)) continue;
-			
-			if(defined('_TBL_MASTERLVL_')) {
-				if(_TBL_MASTERLVL_ != _TBL_CHR_) {
-					$characterMLData = $Character->getMasterLevelInfo($characterName);
-					if(is_array($characterMLData)) {
-						$characterData[_CLMN_CHR_LVL_] += $characterMLData[_CLMN_ML_LVL_];
-					}
-				} else {
-					$characterData[_CLMN_CHR_LVL_] += $characterData[_CLMN_ML_LVL_];
-				}
-			}
-			
-			$characterClassAvatar = getPlayerClassAvatar($characterData[_CLMN_CHR_CLASS_], false);
-			$characterOnlineStatus = in_array($characterName, $onlineCharacters) ? '<img src="'.__PATH_ONLINE_STATUS__.'" class="online-status-indicator"/>' : '<img src="'.__PATH_OFFLINE_STATUS__.'" class="online-status-indicator"/>';
-			echo '<div class="col-xs-3">';
-				echo '<div class="myaccount-character-name">'.playerProfile($characterName).$characterOnlineStatus.'</div>';
-				echo '<div class="myaccount-character-block">';
-					echo '<a href="'.__BASE_URL__.'profile/player/req/'.$characterName.'" target="_blank">';
-						echo '<img src="'.$characterClassAvatar.'" />';
-					echo '</a>';
-				echo '</div>';
-				echo '<div class="myaccount-character-block-location">'.returnMapName($characterData[_CLMN_CHR_MAP_]).'<br />'.$characterData[_CLMN_CHR_MAP_X_].', '.$characterData[_CLMN_CHR_MAP_Y_].'</div>';
-				echo '<span class="myaccount-character-block-level">'.$characterData[_CLMN_CHR_LVL_].'</span>';
-			echo '</div>';
-		}
-	echo '</div>';
-} else {
-	message('warning', lang('error_46'));
+// Account Characters
+$query = odbc_exec($connect, "SELECT * FROM Character(nolock) WHERE AID = '" .$aid. "' AND DeleteFlag = 0 ORDER BY CharNum ASC");
+    if ( odbc_num_rows($query) < 1 ) {
+echo '<table class="table table-condensed table-hover table-striped table-bordered">
+		<thead>
+			<tr>
+				<th colspan="1">'.lang('myaccount_txt_15').'</th>
+			</tr>
+		</thead>
+		<tbody>
+			<form class="form-horizontal" action="" method="post">
+				<tr>
+					<td style="width:100%;">'.lang('error_46').'</td>
+				<tr>
+			</form>
+		</tbody>
+	</table>';
+    } else {
+	echo '<table class="table table-condensed table-hover table-striped table-bordered">
+		<thead>
+			<tr>
+				<th colspan="5">'.lang('myaccount_txt_15').'</th>
+			</tr>
+		</thead>
+		<tbody>
+			<form class="form-horizontal" action="" method="post">
+				<tr>
+					<td style="width:20%;">Name</td>
+					<td style="width:20%;">Level</td>
+					<td style="width:20%;">Exp</td>
+					<td style="width:20%;">BP</td>
+					<td style="width:20%;">K/D</td>
+				</tr>';
+				$i = 1;
+        		while ($i <= odbc_num_rows($query) ){
+        		$chars = odbc_fetch_array($query);
+        		echo '
+				<tr>
+					<td style="width:20%;">' . $chars['Name']. '</td>
+					<td style="width:20%;">' . $chars['Level'] . '</td>
+					<td style="width:20%;">' . $chars['XP'] . '</td>
+					<td style="width:20%;">' . $chars['BP'] . '</td>
+					<td style="width:20%;">' . $chars['KillCount'] . ' / ' . $chars['DeathCount'] . '</td>
+				</tr>';
+				$i++;
+        }
+		echo '</form>
+		</tbody>
+	</table>';
 }
-*/
+
 // Connection History (IGCN)
 if(defined('_TBL_CH_')) {
 	echo '<div class="page-title"><span>'.lang('myaccount_txt_16').'</span></div>';
