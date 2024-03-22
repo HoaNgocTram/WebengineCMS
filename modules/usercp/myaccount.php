@@ -102,25 +102,12 @@ echo '</table>';
 // Account Characters
 $query = odbc_exec($connect, "SELECT * FROM Character(nolock) WHERE AID = '" .$aid. "' AND DeleteFlag = 0 ORDER BY CharNum ASC");
     if ( odbc_num_rows($query) < 1 ) {
-echo '<table class="table table-condensed table-hover table-striped table-bordered">
-		<thead>
-			<tr>
-				<th colspan="1">'.lang('myaccount_txt_15').'</th>
-			</tr>
-		</thead>
-		<tbody>
-			<form class="form-horizontal" action="" method="post">
-				<tr>
-					<td style="width:100%;">'.lang('error_46').'</td>
-				<tr>
-			</form>
-		</tbody>
-	</table>';
+	message('warning', lang('error_46'));
     } else {
 	echo '<table class="table table-condensed table-hover table-striped table-bordered">
 		<thead>
 			<tr>
-				<th colspan="5">'.lang('myaccount_txt_15').'</th>
+				<div class="page-title"><span>'.lang('myaccount_txt_15').'</span></div>
 			</tr>
 		</thead>
 		<tbody>
