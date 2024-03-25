@@ -21,8 +21,11 @@ Here's what you'll need to run WebEngine CMS in your web server
 ### Installing
 
 1. GunZ WebEngine CMS is only suitable for installation on VPS or dedicated servers using Windows OS
-2. Upload the ZIP file contents to your web server
-3. Run WebEngine CMS Installer by going to `example.com/install` and follow the given instructions
+2. Install Xampp [VerPHP7.4](https://sourceforge.net/projects/xampp/files/XAMPP%20Windows/7.4.33/xampp-windows-x64-7.4.33-0-VC15-installer.exe/download)
+3. Copy 4 dlls files from `install` folder to xampp `xampp\php\ext`
+4. Edit php.ini `short_open_tag=On` `extension=odbc` `extension=pdo_odbc` `extension=pdo_sqlsrv_74_nts_x64` `extension=pdo_sqlsrv_74_ts_x64` `extension=sqlsrv_74_nts_x64` `extension=sqlsrv_74_ts_x64`
+5. Upload the ZIP file contents to your web server
+6. Run WebEngine CMS Installer by going to `example.com/install` and follow the given instructions
 
 ## Other Software
 
