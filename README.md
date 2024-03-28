@@ -25,7 +25,8 @@ Here's what you'll need to run WebEngine CMS in your web server
 3. Copy 4 dlls files from `install` folder to xampp `xampp\php\ext`
 4. Edit php.ini `short_open_tag=On` `extension=odbc` `extension=pdo_odbc` `extension=pdo_sqlsrv_74_nts_x64` `extension=pdo_sqlsrv_74_ts_x64` `extension=sqlsrv_74_nts_x64` `extension=sqlsrv_74_ts_x64`
 5. Upload the ZIP file contents to your web server
-6. Run WebEngine CMS Installer by going to `example.com/install` and follow the given instructions
+6. Set up your SQL connection at `modules\config.php`
+7. Run WebEngine CMS Installer by going to `example.com/install` and follow the given instructions
 
 ## Other Software
 
