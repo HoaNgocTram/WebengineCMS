@@ -124,7 +124,7 @@ $query = odbc_exec($connect, "SELECT * FROM Character(nolock) WHERE AID = '" .$a
         		$chars = odbc_fetch_array($query);
         		echo '
 				<tr>
-					<td style="width:20%;">' . $chars['Name']. '</td>
+					<td style="width:20%;"><a href="'.__BASE_URL__.'profile/player/req/'.$chars['Name'].'" target="_blank">' . $chars['Name']. '</td>
 					<td style="width:20%;">' . $chars['Level'] . '</td>
 					<td style="width:20%;">' . $chars['XP'] . '</td>
 					<td style="width:20%;">' . $chars['BP'] . '</td>
