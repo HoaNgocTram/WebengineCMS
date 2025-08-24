@@ -39,10 +39,10 @@ if(check_value($_GET['id'])) {
 				switch($_POST['action']) {
 					case "changepassword":
 						$pass = $_POST['changepassword_newpw'];
-						$res1 = odbc_exec($connect, "SELECT * FROM MEMB_INFO WHERE memb_guid = '".$accountInfo."'");
+						$res1 = odbc_exec($connect, "SELECT * FROM MEMB_INFO WHERE memb_guid = '".$accountInfo['memb_guid']."'");
 						$usr1 = odbc_fetch_array($res1);
 						$user = $usr1['memb___id'];
-						odbc_exec($connect, "UPDATE Login SET Password = $pass WHERE UserID = '" .$user. "'");
+						odbc_exec($connect, "UPDATE Login SET Password = '".$pass."' WHERE UserID = '" .$user. "'");
 						if(!check_value($_POST['changepassword_newpw'])) throw new Exception("Please enter the new password.");
 						if(!Validator::PasswordLength($_POST['changepassword_newpw'])) throw new Exception("Invalid password.");
 						if(!$common->changePassword($accountInfo[_CLMN_MEMBID_], $accountInfo[_CLMN_USERNM_], $_POST['changepassword_newpw'])) throw new Exception("Could not change password.");
@@ -61,11 +61,11 @@ if(check_value($_GET['id'])) {
 					case "changeemail":
 						$email = $_POST['changeemail_newemail'];
 						$id = $userId;
-						$res3 = odbc_exec($connect, "SELECT * FROM MEMB_INFO WHERE memb_guid = '".$id."'");
+						$res3 = odbc_exec($connect, "SELECT * FROM MEMB_INFO WHERE memb_guid = '".$accountInfo['memb_guid']."'");
 						$usr3 = odbc_fetch_array($res3);
 						$user = $usr3['memb___id'];
 
-						odbc_exec($connect, "UPDATE Account SET Email = $email WHERE UserID = '" .$user. "'");
+						odbc_exec($connect, "UPDATE Account SET Email = '".$email."' WHERE UserID = '" .$user. "'");
 						if(!check_value($_POST['changeemail_newemail'])) throw new Exception("Please enter the new email.");
 						if(!Validator::Email($_POST['changeemail_newemail'])) throw new Exception("Invalid email address.");
 						if($common->emailExists($_POST['changeemail_newemail'])) throw new Exception("Another account with the same email already exists.");
