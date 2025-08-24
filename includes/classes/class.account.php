@@ -1,10 +1,10 @@
 <?php
 /**
  * WebEngine CMS
- * https://webenginecms.org/
  * 
  * @version 1.2.3
  * @author Lautaro Angelico <http://lautaroangelico.com/>
+ * @develop Desperate
  * @copyright (c) 2013-2021 Lautaro Angelico, All Rights Reserved
  * 
  * Licensed under the MIT license
@@ -27,90 +27,122 @@ class Account extends common {
 		$this->_country = $country;
 	}
 	
-	public function registerAccount($username, $password, $cpassword, $email) {
-		
-		if(!check_value($username)) throw new Exception(lang('error_4',true));
-		if(!check_value($password)) throw new Exception(lang('error_4',true));
-		if(!check_value($cpassword)) throw new Exception(lang('error_4',true));
-		if(!check_value($email)) throw new Exception(lang('error_4',true));
+	// === GunZ helpers ===
+	private function gunzUsernameExists($username) {
+    	// kiểm tra trùng ở cả MEMB_INFO và Account
+    	$mi = $this->memuonline->query_fetch_single("SELECT 1 AS x FROM MEMB_INFO WHERE memb___id = ?", array($username));
+    	if(is_array($mi)) return true;
+    	$ac = $this->memuonline->query_fetch_single("SELECT 1 AS x FROM Account WHERE UserID = ?", array($username));
+    	return is_array($ac);
+	}
 
-		// Filters
-		if(!Validator::UsernameLength($username)) throw new Exception(lang('error_5',true));
-		if(!Validator::AlphaNumeric($username)) throw new Exception(lang('error_6',true));
-		if(!Validator::PasswordLength($password)) throw new Exception(lang('error_7',true));
-		if($password != $cpassword) throw new Exception(lang('error_8',true));
-		if(!Validator::Email($email)) throw new Exception(lang('error_9',true));
-		
-		# load registration configs
-		$regCfg = loadConfigurations('register');
-		
-		# check if username / email exists
-		if($this->userExists($username)) throw new Exception(lang('error_10',true));
-		if($this->emailExists($email)) throw new Exception(lang('error_11',true));
-		
-		# WebEngine Email Verification System (EVS)
-		if($regCfg['verify_email']) {
-			# check if username / email exists
-			if($this->checkUsernameEVS($username)) throw new Exception(lang('error_10',true));
-			if($this->checkEmailEVS($email)) throw new Exception(lang('error_11',true));
-			
-			# generate verification key
-			$verificationKey = $this->createRegistrationVerification($username,$password,$email);
-			if(!check_value($verificationKey)) throw new Exception(lang('error_23',true));
-			
-			# send verification email
-			$this->sendRegistrationVerificationEmail($username,$email,$verificationKey);
-			message('success', lang('success_18',true));
-			return;
-		}
-		
-		# insert data
-		$data = array(
-			'username' => $username,
-			'password' => $password,
-			'name' => $username,
-			'serial' => $this->_defaultAccountSerial,
-			'email' => $email
-		);
-		
-		# query
-		if($this->_md5Enabled) {
-			$query = "INSERT INTO "._TBL_MI_." ("._CLMN_USERNM_.", "._CLMN_PASSWD_.", "._CLMN_MEMBNAME_.", "._CLMN_SNONUMBER_.", "._CLMN_EMAIL_.", "._CLMN_BLOCCODE_.", "._CLMN_CTLCODE_.") VALUES (:username, [dbo].[fn_md5](:password, :username), :name, :serial, :email, 0, 0)";
-		} else {
-			$query = "INSERT INTO "._TBL_MI_." ("._CLMN_USERNM_.", "._CLMN_PASSWD_.", "._CLMN_MEMBNAME_.", "._CLMN_SNONUMBER_.", "._CLMN_EMAIL_.", "._CLMN_BLOCCODE_.", "._CLMN_CTLCODE_.") VALUES (:username, :password, :name, :serial, :email, 0, 0)";
-		}
-		
-		# register account
-		$result = $this->memuonline->query($query, $data);
-		if(!$result) throw new Exception(lang('error_22',true));
-		
-		# old season support
-		if(config('season_1_support')) {
-			@$this->memuonline->query("INSERT INTO VI_CURR_INFO (ends_days, chek_code, used_time, memb___id, memb_name, memb_guid, sno__numb, Bill_Section, Bill_Value, Bill_Hour, Surplus_Point, Surplus_Minute, Increase_Days) VALUES ('2005', '1', '1234', ?, '', '1', '7', '6', '3', '6', '6', '2020-01-01 00:00:00', '0')", array($username));
-		}
-		
-		# send welcome email
-		if($regCfg['send_welcome_email']) {
-			$this->sendWelcomeEmail($username, $email);
-		}
-		
-		# success message
-		message('success', lang('success_1',true));
-		
-		
-		if($regCfg['automatic_login']) {
-			// automatic log-in
-			try {
-				$userLogin = new login();
-				$userLogin->validateLogin($username, $password);
-			} catch(Exception $ex) {
-				redirect(1,'login/');
-			}
-		} else {
-			// redirect to log-in module
-			redirect(2, 'login/', 5);
-		}
-		
+	private function gunzEmailExists($email) {
+    	// kiểm tra trùng ở cả MEMB_INFO và Account
+    	$mi = $this->memuonline->query_fetch_single("SELECT 1 AS x FROM MEMB_INFO WHERE mail_addr = ?", array($email));
+    	if(is_array($mi)) return true;
+    	$ac = $this->memuonline->query_fetch_single("SELECT 1 AS x FROM Account WHERE Email = ?", array($email));
+    	return is_array($ac);
+	}
+
+	private function gunzInsertAll($username, $password, $email) {
+    	// Giao dịch 3-bước: MEMB_INFO -> Account -> Login
+    	$this->memuonline->query("BEGIN TRANSACTION");
+
+    	// 1) MEMB_INFO (WebEngine login)
+    	$ok1 = $this->memuonline->query(
+        	"INSERT INTO MEMB_INFO (memb___id, memb__pwd, memb_name, mail_addr, bloc_code, ctl1_code, sno__numb)
+         	 VALUES (?,?,?,?,0,0,?)",
+        	array($username, $password, $username, $email, $this->_defaultAccountSerial)
+    	);
+    	if(!$ok1) { $this->memuonline->query("ROLLBACK TRANSACTION"); return false; }
+
+    	// 2) Account (UserID/AID của GunZ)
+    	$ok2 = $this->memuonline->query(
+        	"INSERT INTO Account (UserID, Name, Email, UGradeID, PGradeID, Cash, Event, RegDate)
+        	 VALUES (?, ?, ?, 0, 0, 0, 0, GETDATE())",
+        	array($username, $username, $email)
+    	);
+    	if(!$ok2) { $this->memuonline->query("ROLLBACK TRANSACTION"); return false; }
+
+    	// Lấy AID vừa tạo
+    	$accRow = $this->memuonline->query_fetch_single(
+        	"SELECT AID FROM Account WHERE UserID = ?",
+        	array($username)
+    	);
+    	if(!is_array($accRow) || !isset($accRow['AID'])) {
+        	$this->memuonline->query("ROLLBACK TRANSACTION");
+        	return false;
+    	}
+    	$aid = (int)$accRow['AID'];
+
+    	// 3) Login (mật khẩu client nằm ở bảng này)
+    	$ok3 = $this->memuonline->query(
+        	"INSERT INTO Login (UserID, AID, Password) VALUES (?, ?, ?)",
+        	array($username, $aid, $password)
+    	);
+    	if(!$ok3) { $this->memuonline->query("ROLLBACK TRANSACTION"); return false; }
+
+    	// done
+    	$this->memuonline->query("COMMIT TRANSACTION");
+    	return true;
+	}
+
+	
+	public function registerAccount($username, $password, $cpassword, $email) {
+    	if(!check_value($username)) throw new Exception(lang('error_4',true));
+    	if(!check_value($password)) throw new Exception(lang('error_4',true));
+    	if(!check_value($cpassword)) throw new Exception(lang('error_4',true));
+    	if(!check_value($email)) throw new Exception(lang('error_4',true));
+
+    	// Validate cơ bản
+    	if(!Validator::UsernameLength($username)) throw new Exception(lang('error_5',true));
+    	if(!Validator::AlphaNumeric($username)) throw new Exception(lang('error_6',true));
+    	if(!Validator::PasswordLength($password)) throw new Exception(lang('error_7',true));
+    	if($password != $cpassword) throw new Exception(lang('error_8',true));
+    	if(!Validator::Email($email)) throw new Exception(lang('error_9',true));
+
+    	// Config đăng ký
+    	$regCfg = loadConfigurations('register');
+
+    	// Check tồn tại (MEMB_INFO + Account)
+    	if($this->gunzUsernameExists($username)) throw new Exception(lang('error_10',true));
+    	if($this->gunzEmailExists($email)) throw new Exception(lang('error_11',true));
+
+    	// EVS: nếu bật xác minh email -> tạo yêu cầu & gửi mail, CHƯA insert
+    	if($regCfg['verify_email']) {
+        	// kiểm tra pending EVS cũ
+        	if($this->checkUsernameEVS($username)) throw new Exception(lang('error_10',true));
+        	if($this->checkEmailEVS($email)) throw new Exception(lang('error_11',true));
+
+        	$verificationKey = $this->createRegistrationVerification($username, $password, $email);
+        	if(!check_value($verificationKey)) throw new Exception(lang('error_23',true));
+
+        	$this->sendRegistrationVerificationEmail($username, $email, $verificationKey);
+        	message('success', lang('success_18',true));
+        	return;
+    	}
+
+    	// Không EVS: Insert thẳng vào 3 bảng
+    	$ok = $this->gunzInsertAll($username, $password, $email);
+    	if(!$ok) throw new Exception(lang('error_22',true));
+
+    	// Gửi welcome email (nếu bật)
+    	if($regCfg['send_welcome_email']) {
+        	$this->sendWelcomeEmail($username, $email);
+    	}
+
+    	// Thông báo + auto login (nếu bật)
+    	message('success', lang('success_1',true));
+    	if($regCfg['automatic_login']) {
+        	try {
+            	$userLogin = new login();
+            	$userLogin->validateLogin($username, $password);
+        	} catch(Exception $ex) {
+            	redirect(1,'login/');
+        	}
+    	} else {
+        	redirect(2, 'login/', 5);
+    	}
 	}
 	
 	public function changePasswordProcess($userid, $username, $password, $new_password, $confirm_new_password) {
@@ -395,50 +427,37 @@ class Account extends common {
 	}
 	
 	public function verifyRegistrationProcess($username, $key) {
-		$verifyKey = $this->memuonline->query_fetch_single("SELECT * FROM ".WEBENGINE_REGISTER_ACCOUNT." WHERE registration_account = ? AND registration_key = ?", array($username,$key));
-		if(!is_array($verifyKey)) throw new Exception(lang('error_25',true));
-		
-		# load registration configs
-		$regCfg = loadConfigurations('register');
-		
-		# insert data
-		$data = array(
-			'username' => $verifyKey['registration_account'],
-			'password' => Decode($verifyKey['registration_password']),
-			'name' => $verifyKey['registration_account'],
-			'serial' => $this->_defaultAccountSerial,
-			'email' => $verifyKey['registration_email']
-		);
-		
-		# query
-		if($this->_md5Enabled) {
-			$query = "INSERT INTO "._TBL_MI_." ("._CLMN_USERNM_.", "._CLMN_PASSWD_.", "._CLMN_MEMBNAME_.", "._CLMN_SNONUMBER_.", "._CLMN_EMAIL_.", "._CLMN_BLOCCODE_.", "._CLMN_CTLCODE_.") VALUES (:username, [dbo].[fn_md5](:password, :username), :name, :serial, :email, 0, 0)";
-		} else {
-			$query = "INSERT INTO "._TBL_MI_." ("._CLMN_USERNM_.", "._CLMN_PASSWD_.", "._CLMN_MEMBNAME_.", "._CLMN_SNONUMBER_.", "._CLMN_EMAIL_.", "._CLMN_BLOCCODE_.", "._CLMN_CTLCODE_.") VALUES (:username, :password, :name, :serial, :email, 0, 0)";
-		}
-		
-		# create account
-		$result = $this->memuonline->query($query, $data);
-		if(!$result) throw new Exception(lang('error_22',true));
-		
-		# delete verification request
-		$this->deleteRegistrationVerification($username);
-		
-		# old season support
-		if(config('season_1_support')) {
-			@$this->memuonline->query("INSERT INTO VI_CURR_INFO (ends_days, chek_code, used_time, memb___id, memb_name, memb_guid, sno__numb, Bill_Section, Bill_Value, Bill_Hour, Surplus_Point, Surplus_Minute, Increase_Days) VALUES ('2005', '1', '1234', ?, '', '1', '7', '6', '3', '6', '6', '2020-01-01 00:00:00', '0')", array($verifyKey['registration_account']));
-		}
-		
-		# send welcome email
-		if($regCfg['send_welcome_email']) {
-			$this->sendWelcomeEmail($verifyKey['registration_account'],$verifyKey['registration_email']);
-		}
-		
-		# success message
-		message('success', lang('success_1',true));
-		
-		# redirect to login (5 seconds)
-		redirect(2,'login/',5);
+    	$verifyKey = $this->memuonline->query_fetch_single(
+        	"SELECT * FROM ".WEBENGINE_REGISTER_ACCOUNT." WHERE registration_account = ? AND registration_key = ?",
+        	array($username, $key)
+    	);
+    	if(!is_array($verifyKey)) throw new Exception(lang('error_25',true));
+
+    	// Dữ liệu đã lưu tạm ở EVS
+    	$user = $verifyKey['registration_account'];
+    	$pass = Decode($verifyKey['registration_password']);
+    	$email = $verifyKey['registration_email'];
+
+    	// Double-check: tránh trùng nếu user/email vừa được tạo bằng cách khác
+    	if($this->gunzUsernameExists($user)) throw new Exception(lang('error_10',true));
+    	if($this->gunzEmailExists($email)) throw new Exception(lang('error_11',true));
+
+    	// Insert vào 3 bảng GunZ
+    	$ok = $this->gunzInsertAll($user, $pass, $email);
+    	if(!$ok) throw new Exception(lang('error_22',true));
+
+    	// Xoá yêu cầu EVS
+    	$this->deleteRegistrationVerification($user);
+
+    	// Gửi welcome email (nếu cấu hình)
+    	$regCfg = loadConfigurations('register');
+    	if($regCfg['send_welcome_email']) {
+        	$this->sendWelcomeEmail($user, $email);
+    	}
+
+    	// Thành công -> về trang login
+    	message('success', lang('success_1',true));
+    	redirect(2,'login/',5);
 	}
 	
 	public function getAccountCountry() {
