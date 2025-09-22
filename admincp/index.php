@@ -39,7 +39,7 @@ try {
 
 $admincpSidebar = array(
 	array("Gunz Panel", array(
-		"/gunz/gunz" => "Admin Panel",
+		"/gunz/gunz" => "In Game Panel",
 	), "fa-users"),
 	array("News Management", array(
 		"addnews" => "Publish",
