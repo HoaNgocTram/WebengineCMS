@@ -14,21 +14,30 @@
 // File Name
 $file_name = basename(__FILE__);
 
-// load databases
+// kết nối DB Gunz
 $db = Connection::Database('Me_MuOnline');
 
-// add country to accounts with no country
-$accountList = $db->query_fetch("SELECT TOP 50 * FROM "._TBL_MS_." WHERE "._CLMN_MS_MEMBID_." NOT IN(SELECT account FROM ".WEBENGINE_ACCOUNT_COUNTRY.") AND "._CLMN_MS_IP_." IS NOT NULL");
+// lấy 50 account chưa có country
+$accountList = $db->query_fetch("
+    SELECT TOP 50 * 
+    FROM "._TBL_LOGIN_." 
+    WHERE "._CLMN_LOGIN_USERID_." NOT IN (
+        SELECT account FROM ".WEBENGINE_ACCOUNT_COUNTRY."
+    )
+    AND "._CLMN_LOGIN_IP_." IS NOT NULL
+");
+
 if(is_array($accountList)) {
-	$Account = new Account();
-	foreach($accountList as $row) {
-		$countryCode = getCountryCodeFromIp($row[_CLMN_MS_IP_]);
-		if(!check_value($countryCode)) continue;
-		$Account->setAccount($row[_CLMN_MS_MEMBID_]);
-		$Account->setCountry($countryCode);
-		$Account->insertAccountCountry();
-	}
+    $Account = new Account();
+    foreach($accountList as $row) {
+        $countryCode = getCountryCodeFromIp($row[_CLMN_LOGIN_IP_]);
+        if(!check_value($countryCode)) continue;
+
+        $Account->setAccount($row[_CLMN_LOGIN_USERID_]);
+        $Account->setCountry($countryCode);
+        $Account->insertAccountCountry();
+    }
 }
 
-// UPDATE CRON
+// cập nhật thời gian chạy cron
 updateCronLastRun($file_name);
