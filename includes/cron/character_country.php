@@ -14,47 +14,39 @@
 // File Name
 $file_name = basename(__FILE__);
 
-// load databases
-$mu = Connection::Database('MuOnline');
-$me = Connection::Database('Me_MuOnline');
+// connect DB Gunz
+$db = Connection::Database('Me_MuOnline');
 
+// load cache (character -> country)
 $characterCountryCache = loadCache('character_country.cache');
-$characters = $mu->query_fetch("SELECT "._CLMN_CHR_NAME_.", "._CLMN_CHR_ACCID_." FROM "._TBL_CHR_."");
+
+// lấy danh sách nhân vật và AID
+$characters = $db->query_fetch("SELECT Name, AID FROM Character");
+$result = $characterCountryCache;
+
 if(is_array($characters)) {
-	foreach($characters as $row) {
-		if(array_key_exists($row[_CLMN_CHR_NAME_], $characterCountryCache)) continue;
-		$accountList[] = utf8_encode($row[_CLMN_CHR_ACCID_]);
-	}
+    foreach($characters as $row) {
+        $charName = $row['Name'];
+        $aid      = $row['AID'];
+
+        // nếu cache đã có thì bỏ qua
+        if(array_key_exists($charName, $characterCountryCache)) continue;
+
+        // tìm IP theo AID
+        $acc = $db->query_fetch_single("SELECT LastIP FROM Login WHERE AID = ?", [$aid]);
+        if(!$acc || empty($acc['LastIP'])) continue;
+
+        // convert IP → country code
+        $countryCode = getCountryCodeFromIp($acc['LastIP']);
+        if(!check_value($countryCode)) continue;
+
+        // lưu vào result
+        $result[$charName] = $countryCode;
+    }
 }
 
-$accountList = array_unique($accountList);
-if(is_array($accountList)) {
-	foreach($accountList as $row) {
-		$accountListArray[] = '\''.$row.'\'';
-	}
-	$accountListString = implode(',', $accountListArray);
-	
-	$accountCountry = $me->query_fetch("SELECT * FROM ".WEBENGINE_ACCOUNT_COUNTRY." WHERE account IN(".$accountListString.")");
-	if(is_array($accountCountry)) {
-		foreach($accountCountry as $row) {
-			$accountCountryList[utf8_encode($row['account'])] = $row['country'];
-		}
-	}
-	
-	if(is_array($accountCountryList)) {
-		$result = $characterCountryCache;
-		foreach($characters as $row) {
-			if(array_key_exists($row[_CLMN_CHR_NAME_], $characterCountryCache)) continue;
-			if(!array_key_exists($row[_CLMN_CHR_ACCID_], $accountCountryList)) continue;
-			$result[utf8_encode($row[_CLMN_CHR_NAME_])] = $accountCountryList[$row[_CLMN_CHR_ACCID_]];
-		}
-	}
-}
-
+// nếu có dữ liệu mới thì update cache
 if(is_array($result)) {
-	$cacheData = encodeCache($result);
-	updateCacheFile('character_country.cache', $cacheData);
+    $cacheData = encodeCache($result);
+    updateCacheFile('character_country.cache', $cacheData);
 }
-
-// UPDATE CRON
-updateCronLastRun($file_name);
