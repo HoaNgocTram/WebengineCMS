@@ -26,6 +26,9 @@ define('_TBL_MS_', 'MEMB_STAT');
 	define('_CLMN_MS_MEMBID_', 'memb___id');
 	define('_CLMN_MS_GS_', 'ServerName');
 	define('_CLMN_MS_IP_', 'IP');
+	define('_TBL_LOGIN_', 'Login');
+	define('_CLMN_LOGIN_USERID_', 'UserID');
+	define('_CLMN_LOGIN_IP_', 'LastIP');
 	
 define('_TBL_AC_', 'Character');	//AccountCharacter
 	define('_CLMN_AC_ID_', 'AID');	//Id
