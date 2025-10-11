@@ -116,37 +116,79 @@ class weProfiles {
 	}
 	
 	private function cacheGuildData() {
-		// General Data
-		$guildData = $this->dB->query_fetch_single("SELECT *, EmblemUrl, CLID FROM Clan WHERE Name = ? AND DeleteFlag = 0", array($this->_request));
-		if(!$guildData) throw new Exception(lang('error_25',true));
-		
-		// Members
-		$guildMembers = $this->dB->query_fetch("SELECT * FROM ClanMember WHERE CLID = ?", array($this->_request));
-		if(!$guildMembers) throw new Exception(lang('error_25',true));
-		$members = array();
-		foreach($guildMembers as $gmember) {
-			$members[] = $gmember[_CLMN_GUILDMEMB_CHAR_];
-		}
-		$gmembers_str = implode(",", $members);
-		
-		// Cache
-		$data = array(
-			time(),
-			$guildData[_CLMN_GUILD_NAME_],
-			$guildData[_CLMN_GUILD_LOGO_],
-			$guildData[_CLMN_GUILD_SCORE_],
-			$guildData[_CLMN_GUILD_MASTER_],
-			$gmembers_str
-		);
-		
-		// Cache Ready Data
-		$cacheData = implode("|", $data);
-		
-		// Update Cache File
-		$reqFile = $this->_guildsCachePath . strtolower($this->_request) . '.cache';
-		$fp = fopen($reqFile, 'w+');
-		fwrite($fp, $cacheData);
-		fclose($fp);
+    // Lấy dữ liệu Clan chính
+    $guildData = $this->dB->query_fetch_single(
+        "SELECT CLID, Name, MasterCID, EmblemUrl, Point, Wins, Losses, Draws, Ranking 
+         FROM Clan WITH (NOLOCK)
+         WHERE Name = ? AND DeleteFlag = 0",
+        array($this->_request)
+    );
+
+    if(!$guildData) throw new Exception(lang('error_25', true));
+
+    // Lấy danh sách thành viên Clan (CID)
+    $guildMembers = $this->dB->query_fetch(
+        "SELECT CID, Grade FROM ClanMember WHERE CLID = ?",
+        array($guildData['CLID'])
+    );
+
+    $members = array();
+
+    if(is_array($guildMembers) && count($guildMembers) > 0) {
+        foreach($guildMembers as $gmember) {
+            $cid = intval($gmember['CID']);
+            if($cid <= 0) continue;
+
+            // Lấy tên nhân vật từ bảng Character
+            $charData = $this->dB->query_fetch_single(
+                "SELECT Name FROM Character WHERE CID = ?",
+                array($cid)
+            );
+
+            // Nếu tồn tại nhân vật, thêm vào danh sách
+            if($charData && !empty($charData['Name'])) {
+                $members[] = $charData['Name'];
+            }
+        }
+    }
+
+    // Chuyển danh sách thành viên thành chuỗi
+    $gmembers_str = implode(",", $members);
+
+    // Lấy tên master clan (từ MasterCID -> Character)
+    $masterName = null;
+    if(!empty($guildData['MasterCID'])) {
+        $masterChar = $this->dB->query_fetch_single(
+            "SELECT Name FROM Character WHERE CID = ?",
+            array($guildData['MasterCID'])
+        );
+        if($masterChar && !empty($masterChar['Name'])) {
+            $masterName = $masterChar['Name'];
+        }
+    }
+
+    // Chuẩn bị dữ liệu cache
+    $data = array(
+        time(),                       // timestamp
+        $guildData['Name'],           // tên clan
+        $guildData['EmblemUrl'],      // URL emblem
+        $guildData['Point'],          // điểm clan
+        $masterName,                  // tên chủ clan
+        $gmembers_str,                // danh sách tên thành viên
+        $guildData['Wins'],           // số trận thắng
+        $guildData['Losses'],         // số trận thua
+        $guildData['Draws'],          // số trận hòa
+        $guildData['Ranking']         // thứ hạng clan
+    );
+
+    // Ghép thành chuỗi cache
+    $cacheData = implode("|", $data);
+
+    // Ghi vào file cache
+    $reqFile = $this->_guildsCachePath . strtolower($this->_request) . '.cache';
+    $fp = fopen($reqFile, 'w+');
+    fwrite($fp, $cacheData);
+    fclose($fp);
 	}
 	
 	private function cachePlayerData() {
