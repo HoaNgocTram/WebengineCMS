@@ -50,12 +50,12 @@ try {
 				echo '<td class="rankings-table-place">'.$i.'</td>';
 			}
 			echo '<td class="rankings-table-place">'.$i.'</td>';
-			echo '<td>'.guildProfile($rdata[0]).'</td>';
+			echo '<td><b>'.guildProfile($rdata[0]).'</b></td>';
 			{
 				if ($rdata[1] == NULL)
 				echo '<td><img src="'.__BASE_URL__.'clan/emblem/no_emblem.png" class="emblem" width="50" height="50""/></td>';
 				else
-				echo '<td><img src="'.__BASE_URL__.''.guildProfile($rdata[1]).'" class="emblem" width="50" height="50""/></td>';
+				echo '<td><img src="'.__BASE_URL__.''.$rdata[1].'" class="emblem" width="50" height="50""/></td>';
 			}
 			echo '<td style="color:#00e600";>'.number_format(floor($rdata[2])).'</td>';
 			echo '<td style="color:red";>'.number_format(floor($rdata[3])).'</td>';
