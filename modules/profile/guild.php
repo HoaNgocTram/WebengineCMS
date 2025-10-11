@@ -35,7 +35,12 @@ if(mconfig('active')) {
 				// Guild Information
 				echo '<div class="row">';
 					echo '<div class="col-xs-6 text-center">';
-						echo '<span class="guild_logo">'.$displayData['glogo'].'</span>';
+						{
+							if ($guildData[2] == NULL)
+								echo '<td><img src="'.__BASE_URL__.'clan/emblem/no_emblem.png" class="emblem" width="200" height="200""/></td>';
+							else
+								echo '<td><img src="'.__BASE_URL__.''.$guildData[2].'" class="emblem" width="200" height="200""/></td>';
+						}
 					echo '</div>';
 					echo '<div class="col-xs-6 text-center">';
 						echo '<span class="guild_name">'.$displayData['gname'].'</span>';
