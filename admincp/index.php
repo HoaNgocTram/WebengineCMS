@@ -19,6 +19,8 @@ try {
 	// Load WebENGINE
 	if(!@include_once('../includes/webengine.php')) throw new Exception('Could not load WebEngine.');
 
+	$currentAdminLevel = isset($config['admins'][$_SESSION['username']]) ? $config['admins'][$_SESSION['username']] : 0;
+
 	// Check if user is logged in
 	if(!isLoggedIn()) { redirect(); }
 
@@ -45,17 +47,17 @@ $admincpSidebar = array(
 		"addnews" => "Publish",
 		"managenews" => "Edit / Delete",
 	), "fa-newspaper-o"),
-	// array("Account", array(
-	// 	"searchaccount" => "Search",
-	// 	"accountsfromip" => "Find Accounts from IP",
-	// 	"onlineaccounts" => "Online Accounts",
-	// 	"newregistrations" => "New Registrations",
-	// 	"accountinfo" => "", // HIDDEN
-	// ), "fa-users"),
-	// array("Character", array(
-	// 	"searchcharacter" => "Search",
-	// 	"editcharacter" => "", // HIDDEN
-	// ), "fa-user"),
+	array("Account", array(
+		"searchaccount" => "Search",
+		"accountsfromip" => "Find Accounts from IP",
+		"onlineaccounts" => "Online Accounts",
+		"newregistrations" => "New Registrations",
+		"accountinfo" => "", // HIDDEN
+	), "fa-users"),
+	array("Character", array(
+		"searchcharacter" => "Search",
+		"editcharacter" => "", // HIDDEN
+	), "fa-user"),
 	array("Bans", array(
 		"searchban" => "Search",
 		"banaccount" => "Ban Account",
@@ -88,6 +90,77 @@ $admincpSidebar = array(
 		"plugin_install" => "Import Plugin",
 	), "fa-plug"),
 );
+
+// Filter sidebar by access level
+if ($currentAdminLevel < 100) {
+    foreach ($admincpSidebar as $key => &$item) {
+		if ($item[0] == "Tools") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+		if ($item[0] == "Plugins") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+		if ($item[0] == "Active Plugins") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+        
+        if ($item[0] == "Website Configuration") {
+            $restrictedSubMenus = ['admincp_access', 'connection_settings', 'modules_manager'];
+
+            foreach ($restrictedSubMenus as $restricted) {
+                if (isset($item[1][$restricted])) {
+                    unset($item[1][$restricted]);
+                }
+            }
+        }
+		if ($item[0] == "Credits") {
+            $restrictedSubMenus = ['creditsconfigs'];
+
+            foreach ($restrictedSubMenus as $restricted) {
+                if (isset($item[1][$restricted])) {
+                    unset($item[1][$restricted]);
+                }
+            }
+        }
+    }
+    unset($item);
+}
+if ($currentAdminLevel < 90) {
+    foreach ($admincpSidebar as $key => &$item) {
+        // Ẩn toàn bộ nhóm "Website Configuration"
+        if ($item[0] == "Website Configuration") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+		if ($item[0] == "Tools") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+		if ($item[0] == "Plugins") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+		if ($item[0] == "Active Plugins") {
+            unset($admincpSidebar[$key]);
+            continue; 
+        }
+        
+        if ($item[0] == "Credits") {
+            $restrictedSubMenus = ['creditsconfigs', 'creditsmanager'];
+
+            foreach ($restrictedSubMenus as $restricted) {
+                if (isset($item[1][$restricted])) {
+                    unset($item[1][$restricted]);
+                }
+            }
+        }
+    }
+    unset($item);
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
