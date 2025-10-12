@@ -21,7 +21,30 @@ class Handler {
 		
 		# object instances
 		$handler = $this;
-		
+		if (!isset($_SESSION['language_display'])) {
+    		$autoLang = null;
+
+    		// Ưu tiên theo Accept-Language của trình duyệt
+    		if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        		$langHeader = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+        		switch ($langHeader) {
+					case 'en': $autoLang = 'en'; break; // Tiếng Anh
+            		case 'es': $autoLang = 'es'; break; // Tây Ban Nha, Nam Mỹ
+            		case 'pt': $autoLang = 'pt'; break; // Bồ Đào Nha, Brazil
+            		case 'vi': $autoLang = 'vn'; break; // Việt Nam
+            		case 'tl': $autoLang = 'ph'; break; // Philippines (Filipino)
+            	default: $autoLang = $config['language_default']; break;
+        		}
+    		}
+
+    		// Nếu không có header thì fallback về mặc định
+    		if (!$autoLang) $autoLang = $config['language_default'];
+
+    		// Kiểm tra tồn tại ngôn ngữ
+    		if ($this->languageExists($autoLang)) {
+        		$_SESSION['language_display'] = $autoLang;
+    		}
+		}
 		# load language
 		if(strtolower($config['language_default']) != 'en') {
 			$this->_loadLanguagePhrases('en');
