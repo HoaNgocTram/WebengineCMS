@@ -210,15 +210,25 @@ class weProfiles {
 		
 		// guild data
 		$guild = "";
-		$guildData = $this->dB->query_fetch_single("SELECT * FROM "._TBL_GUILDMEMB_." WHERE "._CLMN_GUILDMEMB_CHAR_." = ?", array($this->_request));
+		$guildData = $this->dB->query_fetch_single("SELECT * FROM ClanMember WITH (NOLOCK) WHERE CLID = ?", array($this->_request));
 		if($guildData) $guild = $guildData[_CLMN_GUILDMEMB_NAME_];
 		
 		// online status
 		$status = 0;
-		if($this->common->accountOnline($playerData[_CLMN_CHR_ACCID_])) {
-			$status = 1;
+		$gunzCheck = $this->dB->query_fetch_single("
+    		SELECT LastLoginTime, LastLogoutTime
+    		FROM Account
+    		WHERE AID = ?
+		", array($playerData[_CLMN_CHR_ACCID_]));
+
+		if(is_array($gunzCheck)) {
+    		$lastLogin  = strtotime($gunzCheck['LastLoginTime']);
+    		$lastLogout = strtotime($gunzCheck['LastLogoutTime']);
+    		if($lastLogin > $lastLogout || ($lastLogin + 600) > time()) {
+        		$status = 1;
+    		}
 		}
-		
+
 		// Cache
 		$data = array(
 			time(),
