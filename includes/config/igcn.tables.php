@@ -21,14 +21,22 @@ define('_TBL_MI_', 'MEMB_INFO');
 	define('_CLMN_MEMBNAME_', 'memb_name');
 	define('_CLMN_CTLCODE_', 'ctl1_code');
 
-define('_TBL_MS_', 'MEMB_STAT');
-	define('_CLMN_CONNSTAT_', 'ConnectStat');
-	define('_CLMN_MS_MEMBID_', 'memb___id');
-	define('_CLMN_MS_GS_', 'ServerName');
-	define('_CLMN_MS_IP_', 'IP');
-	define('_TBL_LOGIN_', 'Login');
+// define('_TBL_MS_', 'MEMB_STAT');
+// 	define('_CLMN_CONNSTAT_', 'ConnectStat');
+// 	define('_CLMN_MS_MEMBID_', 'memb___id');
+// 	define('_CLMN_MS_GS_', 'ServerName');
+// 	define('_CLMN_MS_IP_', 'IP');
+
+define('_TBL_LOGIN_', 'Login');
 	define('_CLMN_LOGIN_USERID_', 'UserID');
 	define('_CLMN_LOGIN_IP_', 'LastIP');
+
+// GunZ Account mapping
+define('_TBL_MS_', 'Account');
+	define('_CLMN_CONNSTAT_', ''); // không dùng trực tiếp nữa
+	define('_CLMN_MS_MEMBID_', 'UserID');
+	define('_CLMN_MS_GS_', 'ServerID');
+	define('_CLMN_MS_IP_', 'Sa');
 	
 define('_TBL_AC_', 'Character');	//AccountCharacter
 	define('_CLMN_AC_ID_', 'AID');	//Id
