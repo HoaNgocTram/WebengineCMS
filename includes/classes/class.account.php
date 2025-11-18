@@ -498,25 +498,64 @@ class Account extends common {
 	}
 	
 	public function getOnlineAccountCount($server=null) {
-		if(check_value($server)) {
-			$result = $this->memuonline->query_fetch_single("SELECT COUNT(*) as online FROM "._TBL_MS_." WHERE "._CLMN_CONNSTAT_." = 1 AND "._CLMN_MS_GS_." = ?", array($server));
-			if(!is_array($result)) return 0;
-			return $result['online'];
-		}
-		$result = $this->memuonline->query_fetch_single("SELECT COUNT(*) as online FROM "._TBL_MS_." WHERE "._CLMN_CONNSTAT_." = 1");
-		if(!is_array($result)) return 0;
-		return $result['online'];
+    if(check_value($server)) {
+        $result = $this->memuonline->query_fetch_single("
+            SELECT COUNT(*) as online 
+            FROM "._TBL_MS_." 
+            WHERE 
+                (
+                    LastLoginTime > ISNULL(LastLogoutTime, '1900-01-01') 
+                    OR DATEDIFF(MINUTE, LastLoginTime, GETDATE()) <= 10
+                )
+                AND ServerID = ?
+        ", array($server));
+        if(!is_array($result)) return 0;
+        return $result['online'];
+    }
+    
+    $result = $this->memuonline->query_fetch_single("
+        SELECT COUNT(*) as online 
+        FROM "._TBL_MS_." 
+        WHERE 
+            (LastLoginTime > ISNULL(LastLogoutTime, '1900-01-01') 
+             OR DATEDIFF(MINUTE, LastLoginTime, GETDATE()) <= 10)
+    ");
+    if(!is_array($result)) return 0;
+    return $result['online'];
 	}
+
 	
 	public function getOnlineAccountList($server=null) {
-		if(check_value($server)) {
-			$result = $this->memuonline->query_fetch("SELECT "._CLMN_MS_MEMBID_.", "._CLMN_MS_GS_.", "._CLMN_MS_IP_." FROM "._TBL_MS_." WHERE "._CLMN_CONNSTAT_." = 1 AND "._CLMN_MS_GS_." = ?", array($server));
-			if(!is_array($result)) return;
-			return $result;
-		}
-		$result = $this->memuonline->query_fetch("SELECT "._CLMN_MS_MEMBID_.", "._CLMN_MS_GS_.", "._CLMN_MS_IP_." FROM "._TBL_MS_." WHERE "._CLMN_CONNSTAT_." = 1");
-		if(!is_array($result)) return;
-		return $result;
+    if(check_value($server)) {
+        $result = $this->memuonline->query_fetch("
+            SELECT 
+                UserID AS memb___id, 
+                ServerID AS ServerName, 
+                Sa AS IP 
+            FROM "._TBL_MS_." 
+            WHERE 
+                (
+                    LastLoginTime > ISNULL(LastLogoutTime, '1900-01-01') 
+                    OR DATEDIFF(MINUTE, LastLoginTime, GETDATE()) <= 10
+                )
+                AND ServerID = ?
+        ", array($server));
+        if(!is_array($result)) return;
+        return $result;
+    }
+
+    $result = $this->memuonline->query_fetch("
+        SELECT 
+            UserID AS memb___id, 
+            ServerID AS ServerName, 
+            Sa AS IP 
+        FROM "._TBL_MS_." 
+        WHERE 
+            (LastLoginTime > ISNULL(LastLogoutTime, '1900-01-01') 
+             OR DATEDIFF(MINUTE, LastLoginTime, GETDATE()) <= 10)
+    ");
+    if(!is_array($result)) return;
+    return $result;
 	}
 	
 	private function sendRegistrationVerificationEmail($username, $account_email, $key) {
